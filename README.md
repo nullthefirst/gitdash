@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GitDash — GitHub Repository Intelligence Dashboard
+
+GitDash is a high-density intelligence dashboard that allows users to analyze public GitHub repositories. It fetches pull requests and utilizes Groq Cloud AI to generate instant, technical summaries of code changes (diffs).
 
 ## Getting Started
 
-First, run the development server:
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Clone the repository:
+
+```Bash
+git clone [https://github.com/your-username/gitdash.git](https://github.com/your-username/gitdash.git)
+
+cd gitdash
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Install dependencies:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```Bash
+pnpm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Set up Environment Variables:
 
-## Learn More
+Configure your .env.local as shown below.
 
-To learn more about Next.js, take a look at the following resources:
+- Run the development server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```Bash
+pnpm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Open the app:
 
-## Deploy on Vercel
+Navigate to http://localhost:3000.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🚀 Features
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Repository Analysis:** Input any public GitHub URL to initialize a dashboard.
+- **AI Summarization:** Powered by Groq **Compound** models to summarize PR diffs into concise technical insights.
+- **Live Filtering:** Toggle between 'Open' and 'Closed' pull requests in real-time.
+- **Modern UI:** Built with Next.js 14 App Router and Tailwind CSS, replicating terminal-precision design.
+
+---
+
+## 🛠 Tech Stack
+
+- **Frontend:** Next.js 14 (App Router), Tailwind CSS, Lucide React.
+- **Backend:** Next.js Route Handlers (Server-side API).
+- **AI Engine:** Groq Cloud SDK (`groq/compound` or `groq/compound-mini`).
+- **API Integration:** GitHub REST API.
+
+---
+
+## 📋 Prerequisites
+
+Before running the project, ensure you have:
+
+- **Node.js 18.x** or later installed.
+- A **GitHub Personal Access Token** (Classic or Fine-grained) with `public_repo` scope.
+- A **Groq Cloud API Key** with access to Compound models (obtainable at [console.groq.com](https://console.groq.com)).
+
+---
+
+## ⚙️ Environment Variables
+
+Create a file named `.env.local` in the root directory and add the following:
+
+```env
+# GitHub Personal Access Token for API calls
+GITHUB_TOKEN=your_github_token_here
+
+# Groq Cloud API Key for AI summarization
+GROQ_API_KEY=your_groq_api_key_here
+```
