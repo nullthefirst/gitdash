@@ -22,7 +22,7 @@ export default function DashboardPage() {
   const repoUrl = searchParams.get("repoUrl") || "facebook/react";
 
   const [prState, setPrState] = useState<"open" | "closed">("open");
-  const [pulls, setPulls] = useState([]);
+  const [pulls, setPulls] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // States for AI responses
