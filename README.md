@@ -22,7 +22,9 @@ pnpm install
 
 - Set up Environment Variables:
 
-Configure your .env.local as shown below.
+```Bash
+cp .env.local .env
+```
 
 - Run the development server:
 
@@ -59,17 +61,3 @@ Before running the project, ensure you have:
 - **Node.js 18.x** or later installed.
 - A **GitHub Personal Access Token** (Classic or Fine-grained) with `public_repo` scope.
 - A **Groq Cloud API Key** with access to Compound models (obtainable at [console.groq.com](https://console.groq.com)).
-
----
-
-## ⚙️ Environment Variables
-
-Create a file named `.env.local` in the root directory and add the following:
-
-```env
-# GitHub Personal Access Token for API calls
-GITHUB_TOKEN=your_github_token_here
-
-# Groq Cloud API Key for AI summarization
-GROQ_API_KEY=your_groq_api_key_here
-```
