@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { Terminal, GitPullRequest, CircleDot, Settings } from "lucide-react";
 
 export default function DashboardLayout({
@@ -10,11 +11,19 @@ export default function DashboardLayout({
     <div className="flex h-screen w-full bg-[#0B141C] text-[#DAE3EE] font-['Inter']">
       {/* Sidebar - Fixed width 256px as per Figma CSS */}
       <aside className="w-64 border-r border-[#414753] bg-[#0B141C] flex flex-col shrink-0">
-        <div className="p-6 flex items-center gap-3">
-          <div className="h-8 w-8 bg-[#222B33] border border-[#414753] flex items-center justify-center rounded shadow-[0px_0px_20px_rgba(170,199,255,0.05)]">
-            <Terminal size={16} className="text-[#AAC7FF]" />
-          </div>
-          <span className="font-bold tracking-tight text-[16px]">GitDash</span>
+        <div className="p-6 border-b border-[#414753]/50">
+          <Link
+            href="/"
+            className="flex items-center gap-3 group transition-opacity hover:opacity-80"
+          >
+            <div className="h-8 w-8 bg-[#222B33] border border-[#414753] flex items-center justify-center rounded shadow-[0px_0px_20px_rgba(170,199,255,0.05)] group-hover:border-[#AAC7FF]/50 transition-colors">
+              <Terminal size={16} className="text-[#AAC7FF]" />
+            </div>
+
+            <span className="font-bold tracking-tight text-[16px] text-[#DAE3EE]">
+              GitDash
+            </span>
+          </Link>
         </div>
 
         <nav className="flex-1 px-4 space-y-1 mt-2">
