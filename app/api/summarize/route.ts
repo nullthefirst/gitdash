@@ -3,22 +3,15 @@ import { Groq } from "groq-sdk";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// Constants for Context Window Management
-const MAX_TOTAL_CHARS = 25000; // Safe threshold for Groq's gateway
-const IGNORED_FILES = [
-  "package-lock.json",
-  "yarn.lock",
-  "pnpm-lock.yaml",
-  ".next",
-  "dist",
-  ".map",
-];
+// Config for high-density, low-cost processing
+const TOTAL_CHAR_LIMIT = 32000;
+const MAX_CHARS_PER_FILE = 4000; // Ensures one giant file doesn't eat the whole budget
+const IGNORED_EXTENSIONS = [".lock", ".json", ".map", ".md", ".svg", ".png"];
 
 export async function POST(request: NextRequest) {
   try {
     const { owner, repo, pullNumber } = await request.json();
 
-    // 1. Fetch the diff
     const diffResponse = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`,
       {
@@ -30,67 +23,71 @@ export async function POST(request: NextRequest) {
     );
 
     if (!diffResponse.ok) throw new Error("Failed to fetch PR diff");
-    let diffText = await diffResponse.text();
+    const diffText = await diffResponse.text();
 
-    // 2. Intelligent Truncation: Filter out noise files manually if they exist in the diff string
-    // Note: v3.diff returns a plain string. We split by file headers to filter.
-    const diffFiles = diffText.split("diff --git ");
+    const fileDiffs = diffText.split("diff --git ");
+    let budgetRemaining = TOTAL_CHAR_LIMIT;
 
-    const filteredDiff = diffFiles
-      .filter((file) => {
-        // Keep the first segment (usually empty or metadata)
-        if (!file.includes("a/")) return true;
-        // Drop ignored files to save space
-        return !IGNORED_FILES.some((ignored) => file.includes(ignored));
+    const processedFiles = fileDiffs
+      .map((file) => {
+        if (!file.trim()) return "";
+
+        const isIgnored = IGNORED_EXTENSIONS.some((ext) =>
+          file.toLowerCase().includes(ext),
+        );
+        if (isIgnored && fileDiffs.length > 5) return ""; // Only ignore if it's a large PR
+
+        let fileContent = file;
+        if (fileContent.length > MAX_CHARS_PER_FILE) {
+          fileContent =
+            fileContent.substring(0, MAX_CHARS_PER_FILE) +
+            "\n... [File Truncated] ...";
+        }
+
+        if (budgetRemaining <= 0) return "";
+        const chunk = fileContent.substring(0, budgetRemaining);
+        budgetRemaining -= chunk.length;
+
+        return "diff --git " + chunk;
       })
-      .join("diff --git ");
+      .filter(Boolean)
+      .join("\n");
 
-    // 3. Hard Character Cap for Gateway Safety
-    let processedDiff = filteredDiff;
-    if (filteredDiff.length > MAX_TOTAL_CHARS) {
-      processedDiff =
-        filteredDiff.substring(0, MAX_TOTAL_CHARS) +
-        "\n\n... [TRUNCATED: PR too large for full analysis] ...";
-    }
-
-    // 4. Groq Inference
     const completion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: `You are a high-density intelligence engine.
-          Analyze the git diff and provide a 3-bullet point summary.
-          Strictly follow this format:
-          - Logic: [Brief explanation of code changes]
-          - Impact: [How this affects the application]
-          - Risk: [Potential side effects or technical debt]
-          Keep response concise and technical.`,
+          content: `You are a high-density intelligence engine. Summarize technical changes.
+          Output strictly in 3 bullets:
+          - Logic: summary of code changes
+          - Impact: application behavior changes
+          - Risk: potential bugs or debt
+          Be extremely concise. Use technical shorthand.`,
         },
         {
           role: "user",
-          content: `Analyze this git diff:\n\n${processedDiff}`,
+          content: `Diff content:\n${processedFiles}`,
         },
       ],
-      model: "groq/compound", // or "llama-3.3-70b-versatile" for massive windows
+      model: "llama-3.3-70b-versatile",
       temperature: 0.1,
-      max_tokens: 512, // Limits response size to save output window
+      max_tokens: 300, // Reduced for token spend sensitivity
+      top_p: 1,
     });
 
-    const summary =
-      completion.choices[0]?.message?.content || "Analysis unavailable.";
-
-    return NextResponse.json({ summary });
+    return NextResponse.json({
+      summary:
+        completion.choices[0]?.message?.content || "Analysis unavailable.",
+    });
   } catch (error: any) {
-    console.error("AI Analysis Error:", error);
-
-    // Explicitly check for Groq specific errors
-    const errorMessage =
-      error.status === 413
-        ? "Payload too large. Try a smaller Pull Request."
-        : "Intelligence engine failed";
-
+    console.error("AI Error:", error);
     return NextResponse.json(
-      { error: errorMessage },
+      {
+        error:
+          error.status === 413
+            ? "PR too large for AI gateway"
+            : "Intelligence engine failure",
+      },
       { status: error.status || 500 },
     );
   }
