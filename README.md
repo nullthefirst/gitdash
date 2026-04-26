@@ -5,7 +5,7 @@ GitDash is a high-density intelligence dashboard that allows users to analyze pu
 ## Features
 
 - **Repository Analysis:** Input any public GitHub URL to initialize a dashboard.
-- **AI Summarization:** Powered by Groq **Compound** models to summarize PR diffs into concise technical insights.
+- **AI Summarization:** Powered by a Groq LLAMA model to summarize PR diffs into concise technical insights.
 - **Live Filtering:** Toggle between 'Open' and 'Closed' pull requests in real-time.
 - **Modern UI:** Built with Next.js 14 App Router and Tailwind CSS, replicating terminal-precision design.
 
@@ -15,7 +15,7 @@ GitDash is a high-density intelligence dashboard that allows users to analyze pu
 
 - **Frontend:** Next.js 14 (App Router), Tailwind CSS, Lucide React.
 - **Backend:** Next.js Route Handlers (Server-side API).
-- **AI Engine:** Groq Cloud SDK (`groq/compound` or `groq/compound-mini`).
+- **AI Engine:** Groq Cloud SDK (`groq/llama-3.3-70b-versatile`).
 - **API Integration:** GitHub REST API.
 
 ---
