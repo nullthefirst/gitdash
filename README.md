@@ -37,7 +37,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 - Clone the repository:
 
 ```Bash
-git clone [https://github.com/your-username/gitdash.git](https://github.com/your-username/gitdash.git)
+git clone https://github.com/nullthefirst/gitdash.git
 
 cd gitdash
 ```
