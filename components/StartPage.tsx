@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import {
   Terminal,
   Link as LinkIcon,
@@ -36,7 +37,7 @@ const StartPage = () => {
 
         {/* Search Input Form */}
         <div className="relative flex w-full max-w-[592px] items-center">
-          <div className="absolute left-4 flex items-center justify-center text-[#8B919F]">
+          <div className="absolute left-4 z-10 flex items-center justify-center text-[#8B919F]">
             <LinkIcon size={18} />
           </div>
 
@@ -46,10 +47,15 @@ const StartPage = () => {
             className="h-14 w-full border border-[#414753] bg-[#0B141C] pl-12 pr-36 text-sm text-[#DAE3EE] placeholder-[#8B919F] shadow-[inset_0px_2px_4px_1px_rgba(0,0,0,0.2)] outline-none focus:border-[#AAC7FF]/50 transition-colors"
           />
 
-          <button className="absolute right-1.5 flex h-11 items-center gap-2 bg-[#AAC7FF] px-5 text-sm font-semibold text-[#002F65] transition-opacity hover:opacity-90">
-            Analyze
-            <ArrowRight size={14} />
-          </button>
+          <Link
+            href="/dashboard"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center"
+          >
+            <button className="flex h-11 items-center gap-2 bg-[#AAC7FF] px-5 text-sm font-semibold text-[#002F65] transition-opacity hover:opacity-90 active:scale-95">
+              Analyze
+              <ArrowRight size={14} />
+            </button>
+          </Link>
         </div>
 
         {/* Margin / Helper Text */}
