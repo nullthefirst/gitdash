@@ -23,7 +23,7 @@ pnpm install
 - Set up Environment Variables:
 
 ```Bash
-cp .env.local .env
+cp .env.example .env.local
 ```
 
 - Run the development server:
