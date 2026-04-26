@@ -3,10 +3,22 @@ import { Groq } from "groq-sdk";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+// Constants for Context Window Management
+const MAX_TOTAL_CHARS = 25000; // Safe threshold for Groq's gateway
+const IGNORED_FILES = [
+  "package-lock.json",
+  "yarn.lock",
+  "pnpm-lock.yaml",
+  ".next",
+  "dist",
+  ".map",
+];
+
 export async function POST(request: NextRequest) {
   try {
     const { owner, repo, pullNumber } = await request.json();
 
+    // 1. Fetch the diff
     const diffResponse = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`,
       {
@@ -18,19 +30,30 @@ export async function POST(request: NextRequest) {
     );
 
     if (!diffResponse.ok) throw new Error("Failed to fetch PR diff");
-    const diffText = await diffResponse.text();
+    let diffText = await diffResponse.text();
 
-    // Define a max character limit for the raw text (e.g., 30,000 chars)
-    const MAX_DIFF_LENGTH = 5000;
+    // 2. Intelligent Truncation: Filter out noise files manually if they exist in the diff string
+    // Note: v3.diff returns a plain string. We split by file headers to filter.
+    const diffFiles = diffText.split("diff --git ");
 
-    let processedDiff = diffText;
+    const filteredDiff = diffFiles
+      .filter((file) => {
+        // Keep the first segment (usually empty or metadata)
+        if (!file.includes("a/")) return true;
+        // Drop ignored files to save space
+        return !IGNORED_FILES.some((ignored) => file.includes(ignored));
+      })
+      .join("diff --git ");
 
-    if (diffText.length > MAX_DIFF_LENGTH) {
+    // 3. Hard Character Cap for Gateway Safety
+    let processedDiff = filteredDiff;
+    if (filteredDiff.length > MAX_TOTAL_CHARS) {
       processedDiff =
-        diffText.substring(0, MAX_DIFF_LENGTH) +
-        "\n\n... [Diff truncated due to size limits] ...";
+        filteredDiff.substring(0, MAX_TOTAL_CHARS) +
+        "\n\n... [TRUNCATED: PR too large for full analysis] ...";
     }
 
+    // 4. Groq Inference
     const completion = await groq.chat.completions.create({
       messages: [
         {
@@ -40,16 +63,17 @@ export async function POST(request: NextRequest) {
           Strictly follow this format:
           - Logic: [Brief explanation of code changes]
           - Impact: [How this affects the application]
-          - Risk: [Potential side effects or technical debt]`,
+          - Risk: [Potential side effects or technical debt]
+          Keep response concise and technical.`,
         },
         {
           role: "user",
-          content: `Analyze this diff:\n\n${processedDiff}`,
+          content: `Analyze this git diff:\n\n${processedDiff}`,
         },
       ],
-      // Using groq/compound for better reasoning, or groq/compound-mini for speed
-      model: "groq/compound",
-      temperature: 0.2, // Lower temperature for more factual, consistent summaries
+      model: "groq/compound", // or "llama-3.3-70b-versatile" for massive windows
+      temperature: 0.1,
+      max_tokens: 512, // Limits response size to save output window
     });
 
     const summary =
@@ -58,9 +82,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ summary });
   } catch (error: any) {
     console.error("AI Analysis Error:", error);
+
+    // Explicitly check for Groq specific errors
+    const errorMessage =
+      error.status === 413
+        ? "Payload too large. Try a smaller Pull Request."
+        : "Intelligence engine failed";
+
     return NextResponse.json(
-      { error: "Intelligence engine failed" },
-      { status: 500 },
+      { error: errorMessage },
+      { status: error.status || 500 },
     );
   }
 }
